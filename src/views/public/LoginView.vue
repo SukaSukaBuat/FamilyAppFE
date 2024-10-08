@@ -19,8 +19,9 @@
                     </div>
                     <Button type="submit" label="Log Masuk" class="w-full mb-4" />
                     <div class="flex justify-center mb-4">
-                        Lupa kata laluan? <a href="/reset-password" class="text-blue-500 hover:underline">Tetap semula
-                            kata laluan</a>
+                        Lupa kata laluan? <router-link to="/reset-password-request"
+                            class="text-blue-500 hover:underline">Tetap semula
+                            kata laluan</router-link>
                     </div>
 
                     <span class="flex justify-center mb-4">
@@ -51,9 +52,11 @@ import { useToast } from 'primevue/usetoast';
 import { useAxiosStore } from '@/stores/axios';
 import { useForm } from 'vee-validate';
 import '@/plugins/validationRules';
+import { useUserStore } from '@/stores/user';
 
 const toast = useToast();
 const axiosStore = useAxiosStore();
+const userStore = useUserStore();
 
 const loginForm = reactive(useForm({
     validationSchema: {
@@ -72,8 +75,9 @@ async function onLogin() {
         try {
             const response = await axiosStore.post('auth/signin', loginForm.values);
             if (response.status === 200) {
-                toast.add({ severity: 'success', summary: 'Berjaya', detail: 'Log masuk berjaya' });
-                //TODO: Redirect to dashboard, save token to local storage
+                toast.add({ severity: 'success', summary: 'Berjaya', detail: 'Log masuk berjaya', life: 3000 });
+                userStore.authToken = response.data.token;
+                router.push({ name: 'Home' });
             }
         }
         catch (error) {

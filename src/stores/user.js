@@ -3,9 +3,11 @@ import { useStorage } from '@vueuse/core'
 import { ref, reactive, watch } from 'vue'
 import { useJwt } from '@vueuse/integrations/useJwt'
 
-const emailClaims = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'
-const rolesClaims = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
-const idClaims = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'
+const emailClaims = 'email'
+const rolesClaims = 'role'
+const userIdClaim = 'user_id'
+const sessionId = 'session_id'
+const ouathProvider = 'oauth_provider'
 const adminRole = 'ADMIN'
 export const useUserStore = defineStore('user', () => {
   const authToken = useStorage('authToken', null)
@@ -13,6 +15,8 @@ export const useUserStore = defineStore('user', () => {
   const user = reactive({
     id: null,
     email: null,
+    sessionId: null,
+    oauthProvider: null,
     roles: []
   })
   const isAuthenticated = ref(false)
@@ -24,9 +28,11 @@ export const useUserStore = defineStore('user', () => {
         jwtObject.value = useJwt(value)
       }
       if (jwtObject.value?.payload) {
-        user.id = jwtObject.value.payload[idClaims]
+        user.id = jwtObject.value.payload[userIdClaim]
         user.email = jwtObject.value.payload[emailClaims]
         user.roles = jwtObject.value.payload[rolesClaims]
+        user.sessionId = jwtObject.value.payload[sessionId]
+        user.oauthProvider = jwtObject.value.payload[ouathProvider]
         isAuthenticated.value = jwtObject.value.payload.exp > Date.now() / 1000
         isAdmin.value = user.roles?.includes(adminRole) || user.roles === adminRole
         if (!isAuthenticated.value && authToken.value) {
